@@ -59,8 +59,11 @@ fun PddApp() {
     NavHost(navController, startDestination = "category_selection") {
         composable("category_selection") { CategorySelectionScreen(navController) }
         composable("questions/{category}/{ticketNumber}",
-            arguments = listOf(navArgument("category") { type = NavType.StringType },
-                navArgument("ticketNumber") { type = NavType.IntType })) { backStackEntry ->
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType },
+                navArgument("ticketNumber") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category")
             val ticketNumber = backStackEntry.arguments?.getInt("ticketNumber")
             if (category != null && ticketNumber != null) {
@@ -73,7 +76,7 @@ fun PddApp() {
 }
 
 fun navigateToRandomTicket(navController: NavController, category: String) {
-    val randomTicketNumber = (1..40).random()  // Пример диапазона для случайного выбора билета
+    val randomTicketNumber = (1..40).random()  // Example range for random ticket selection
     navController.navigate("questions/$category/$randomTicketNumber")
 }
 
@@ -101,6 +104,7 @@ fun parseQuestions(json: String): List<Question> {
         emptyList()
     }
 }
+
 
 
 

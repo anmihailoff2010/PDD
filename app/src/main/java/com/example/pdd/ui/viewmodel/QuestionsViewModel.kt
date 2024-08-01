@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.pdd.ui.model.Answer
 import com.example.pdd.ui.model.Question
@@ -22,14 +24,22 @@ class QuestionsViewModel(private val context: Context) : ViewModel() {
     var mistakes: List<UserAnswer> by mutableStateOf(emptyList())
     var currentQuestionIndex by mutableStateOf(0)
     var correctAnswersCount by mutableStateOf(0)
-    var totalQuestionsCount by mutableStateOf(20)
+
+    init {
+        loadMistakes()
+        correctAnswersCount = countCorrectAnswers()
+    }
 
     fun loadQuestions(ticketNumber: Int) {
         val fileName = "ticket${ticketNumber}.json"
         try {
             val jsonString = loadJsonFromAsset(context, fileName)
             questions = parseQuestions(jsonString)
-            reset()
+            currentQuestionIndex = 0
+            userAnswers = emptyList()
+            mistakes = emptyList()
+            correctAnswersCount = 0  // Reset correct answers count
+            Log.d("QuestionsViewModel", "Questions loaded: ${questions.size}")
         } catch (e: IOException) {
             Log.e("QuestionsViewModel", "Error loading questions from asset $fileName: ${e.message}")
         }
@@ -38,22 +48,20 @@ class QuestionsViewModel(private val context: Context) : ViewModel() {
     fun selectAnswer(answerIndex: Int) {
         val question = questions.getOrNull(currentQuestionIndex) ?: return
         val questionId = question.id
-        val isCorrect = question.answers[answerIndex].isCorrect
 
-        // Увеличиваем количество правильных ответов, если ответ верный
-        if (isCorrect) {
-            correctAnswersCount++
-        } else {
-            mistakes = mistakes + UserAnswer(questionId, answerIndex)
-        }
+        Log.d("QuestionsViewModel", "Selecting answer: $answerIndex for questionId: $questionId")
 
+        // Update user answers and recalculate correct answers count
         userAnswers = userAnswers.filter { it.questionId != questionId } + UserAnswer(questionId, answerIndex)
-        Log.d("QuestionsViewModel", "Selected Answer: questionId=$questionId, answerIndex=$answerIndex, Is Correct: $isCorrect")
+        correctAnswersCount = countCorrectAnswers() // Recalculate correct answers count
     }
 
     fun nextQuestion() {
         if (currentQuestionIndex < questions.size - 1) {
             currentQuestionIndex++
+            Log.d("QuestionsViewModel", "Moved to next question: index $currentQuestionIndex")
+        } else {
+            Log.d("QuestionsViewModel", "No more questions to move to.")
         }
     }
 
@@ -62,17 +70,31 @@ class QuestionsViewModel(private val context: Context) : ViewModel() {
         userAnswers = emptyList()
         mistakes = emptyList()
         correctAnswersCount = 0
+        Log.d("QuestionsViewModel", "Reset all values")
+    }
+
+    private fun countCorrectAnswers(): Int {
+        return userAnswers.count { userAnswer ->
+            val question = questions.find { it.id == userAnswer.questionId }
+            val correctAnswerIndex = question?.answers?.indexOfFirst { it.isCorrect } ?: -1
+            correctAnswerIndex == userAnswer.selectedAnswer
+        }
+    }
+
+    fun totalQuestionsCount(): Int {
+        return questions.size
     }
 
     fun calculateMistakes() {
         mistakes = userAnswers.filter { userAnswer ->
             val question = questions.find { it.id == userAnswer.questionId }
-            question?.answers?.get(userAnswer.selectedAnswer)?.isCorrect == false
+            val correctAnswerIndex = question?.answers?.indexOfFirst { it.isCorrect } ?: -1
+            correctAnswerIndex != userAnswer.selectedAnswer
         }
-        correctAnswersCount = userAnswers.count { userAnswer ->
-            val question = questions.find { it.id == userAnswer.questionId }
-            question?.answers?.get(userAnswer.selectedAnswer)?.isCorrect == true
-        }
+        correctAnswersCount = countCorrectAnswers()
+        saveMistakes()
+        Log.d("QuestionsViewModel", "Mistakes calculated: $mistakes")
+        Log.d("QuestionsViewModel", "Correct answers calculated: $correctAnswersCount")
     }
 
     private fun loadJsonFromAsset(context: Context, fileName: String): String {
@@ -96,6 +118,24 @@ class QuestionsViewModel(private val context: Context) : ViewModel() {
             Log.e("QuestionsViewModel", "Error parsing JSON: ${e.message}")
             emptyList()
         }
+    }
+
+    private fun saveMistakes() {
+        val sharedPreferences = context.getSharedPreferences("pdd_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        val gson = Gson()
+        val mistakesJson = gson.toJson(mistakes)
+        editor.putString("mistakes", mistakesJson)
+        editor.apply()
+        Log.d("QuestionsViewModel", "Mistakes saved: $mistakesJson")
+    }
+
+    private fun loadMistakes() {
+        val sharedPreferences = context.getSharedPreferences("pdd_prefs", Context.MODE_PRIVATE)
+        val gson = Gson()
+        val mistakesJson = sharedPreferences.getString("mistakes", "[]")
+        mistakes = gson.fromJson(mistakesJson, object : TypeToken<List<UserAnswer>>() {}.type)
+        Log.d("QuestionsViewModel", "Mistakes loaded: $mistakes")
     }
 }
 

@@ -15,5 +15,3 @@ class QuestionsViewModelFactory(private val context: Context) : ViewModelProvide
     }
 }
 
-
-

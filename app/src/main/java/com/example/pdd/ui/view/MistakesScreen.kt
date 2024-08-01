@@ -1,23 +1,35 @@
 package com.example.pdd.ui.view
 
-import android.app.Application
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Button
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,14 +40,24 @@ import com.example.pdd.ui.viewmodel.QuestionsViewModelFactory
 
 @Composable
 fun MistakesScreen(navController: NavHostController) {
-    val context = LocalContext.current.applicationContext as Application
+    val context = LocalContext.current
     val viewModel: QuestionsViewModel = viewModel(factory = QuestionsViewModelFactory(context))
+
+    LaunchedEffect(Unit) {
+        viewModel.calculateMistakes()
+    }
+
+    val mistakes = viewModel.mistakes
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Мои ошибки") },
-                backgroundColor = MaterialTheme.colors.primary
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigate("test_results") }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = null)
+                    }
+                }
             )
         },
         content = { paddingValues ->
@@ -44,60 +66,69 @@ fun MistakesScreen(navController: NavHostController) {
                     .fillMaxSize()
                     .padding(paddingValues)
                     .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top
             ) {
-                Text(
-                    text = "Правильных ответов: ${viewModel.correctAnswersCount}/${viewModel.totalQuestionsCount}",
-                    style = MaterialTheme.typography.h6,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                if (viewModel.mistakes.isEmpty()) {
+                if (mistakes.isEmpty()) {
                     Text("Нет ошибок")
                 } else {
-                    viewModel.mistakes.forEach { mistake ->
-                        val question = viewModel.questions.find { it.id == mistake.questionId }
-                        question?.let {
-                            Text(
-                                text = it.text,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
+                    LazyColumn {
+                        items(mistakes) { mistake ->
+                            val question = viewModel.questions.find { it.id == mistake.questionId }
+                            question?.let {
+                                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                                    Text(
+                                        text = it.text,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                    it.answers.forEachIndexed { index, answer ->
+                                        val isCorrectAnswer = answer.isCorrect
+                                        val userSelected = index == mistake.selectedAnswer
 
-                            it.answers.forEachIndexed { index, answer ->
-                                val isCorrectAnswer = answer.isCorrect
-                                val userSelected = index == mistake.selectedAnswer
+                                        val color = when {
+                                            userSelected && isCorrectAnswer -> Color.Green
+                                            userSelected -> Color.Red
+                                            isCorrectAnswer -> Color.Green
+                                            else -> Color.Gray
+                                        }
 
-                                val color = when {
-                                    userSelected && isCorrectAnswer -> Color.Green
-                                    userSelected -> Color.Red
-                                    isCorrectAnswer -> Color.Green
-                                    else -> Color.Gray
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        ) {
+                                            RadioButton(
+                                                selected = userSelected,
+                                                onClick = null, // disable RadioButton interaction
+                                                colors = RadioButtonDefaults.colors(
+                                                    selectedColor = color,
+                                                    unselectedColor = color
+                                                )
+                                            )
+                                            Text(
+                                                text = answer.answerText,
+                                                color = color,
+                                                modifier = Modifier.padding(start = 8.dp)
+                                            )
+                                        }
+                                    }
+                                    if (it.answerTip.isNotEmpty()) {
+                                        Text(
+                                            text = it.answerTip,
+                                            fontStyle = FontStyle.Italic,
+                                            fontSize = 14.sp,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
+                                    Divider(modifier = Modifier.padding(vertical = 8.dp))
                                 }
-
-                                Text(
-                                    text = answer.answerText,
-                                    color = color,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
                             }
-                            Spacer(modifier = Modifier.height(32.dp))
                         }
                     }
-                }
-
-                Button(
-                    onClick = {
-                        viewModel.reset()
-                        navController.navigate("category_selection")
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Вернуться к категориям")
                 }
             }
         }
     )
 }
+

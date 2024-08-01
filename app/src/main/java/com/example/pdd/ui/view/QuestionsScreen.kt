@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.Icon
@@ -22,11 +24,15 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +48,7 @@ import com.example.pdd.ui.viewmodel.QuestionsViewModelFactory
 
 @Composable
 fun QuestionsScreen(navController: NavHostController, category: String, ticketNumber: Int) {
-    val context = LocalContext.current.applicationContext as Application
+    val context = LocalContext.current
     val viewModel: QuestionsViewModel = viewModel(factory = QuestionsViewModelFactory(context))
 
     LaunchedEffect(ticketNumber) {
@@ -69,51 +75,56 @@ fun QuestionsScreen(navController: NavHostController, category: String, ticketNu
                         .padding(paddingValues)
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    question.imageUrl?.let {
-                        val painter = rememberAsyncImagePainter(
-                            ImageRequest.Builder(context)
-                                .data(it)
-                                .apply {
-                                    size(coil.size.Size.ORIGINAL)
-                                    scale(Scale.FILL)
-                                }
-                                .build()
-                        )
-                        Image(
-                            painter = painter,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1.78f)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Fit
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = question.text,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    question.answers.forEachIndexed { index, answer ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = viewModel.userAnswers.any { it.questionId == question.id && it.selectedAnswer == index },
-                                onClick = {
-                                    Log.d("QuestionsScreen", "Question ID: ${question.id}, Answer Index: $index")
-                                    viewModel.selectAnswer(index)
-                                }
+                    LazyColumn(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        item {
+                            question.imageUrl?.let {
+                                val painter = rememberAsyncImagePainter(
+                                    ImageRequest.Builder(context)
+                                        .data(it)
+                                        .apply {
+                                            size(coil.size.Size.ORIGINAL)
+                                            scale(Scale.FILL)
+                                        }
+                                        .build()
+                                )
+                                Image(
+                                    painter = painter,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(1.78f)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = question.text,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                modifier = Modifier.fillMaxWidth()
                             )
-                            Text(answer.answerText)
+                            Spacer(modifier = Modifier.height(16.dp))
+                            question.answers.forEachIndexed { index, answer ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = viewModel.userAnswers.any { it.questionId == question.id && it.selectedAnswer == index },
+                                        onClick = {
+                                            viewModel.selectAnswer(index)
+                                        }
+                                    )
+                                    Text(answer.answerText)
+                                }
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -135,6 +146,12 @@ fun QuestionsScreen(navController: NavHostController, category: String, ticketNu
             }
         )
     } else {
-        Text("Загрузка данных...", modifier = Modifier.fillMaxSize())
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
     }
 }
+

@@ -37,27 +37,20 @@ fun CategorySelectionScreen(navController: NavHostController) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Button(
-                    onClick = { navigateToRandomTicket(navController, "A") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray)
-                ) {
-                    Text("Категория A")
-                }
-                Button(
-                    onClick = { navigateToRandomTicket(navController, "B") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray)
-                ) {
-                    Text("Категория B")
+                listOf("A", "B").forEach { category ->
+                    Button(
+                        onClick = { navigateToRandomTicket(navController, category) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray)
+                    ) {
+                        Text("Категория $category")
+                    }
                 }
             }
         }
     )
 }
+
