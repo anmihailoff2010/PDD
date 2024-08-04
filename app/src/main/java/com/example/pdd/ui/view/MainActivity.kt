@@ -56,8 +56,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun PddApp() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val viewModel: QuestionsViewModel = viewModel(factory = QuestionsViewModelFactory(context))
+
     NavHost(navController, startDestination = "category_selection") {
-        composable("category_selection") { CategorySelectionScreen(navController) }
+        composable("category_selection") { CategorySelectionScreen(navController, viewModel) }
         composable("questions/{category}/{ticketNumber}",
             arguments = listOf(
                 navArgument("category") { type = NavType.StringType },
@@ -67,13 +70,14 @@ fun PddApp() {
             val category = backStackEntry.arguments?.getString("category")
             val ticketNumber = backStackEntry.arguments?.getInt("ticketNumber")
             if (category != null && ticketNumber != null) {
-                QuestionsScreen(navController, category, ticketNumber)
+                QuestionsScreen(navController, category, ticketNumber, viewModel)
             }
         }
-        composable("test_results") { TestResultsScreen(navController) }
-        composable("mistakes") { MistakesScreen(navController) }
+        composable("test_results") { TestResultsScreen(navController, viewModel) }
+        composable("mistakes") { MistakesScreen(navController, viewModel) }
     }
 }
+
 
 fun navigateToRandomTicket(navController: NavController, category: String) {
     val randomTicketNumber = (1..40).random()  // Example range for random ticket selection

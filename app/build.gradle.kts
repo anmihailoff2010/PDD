@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.androidx.material)
     implementation(libs.ui.tooling.preview)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.ui.ui.tooling.preview)
     implementation(libs.accompanist.navigation.animation)
     implementation(libs.gson)
     implementation (libs.coil.compose)
@@ -74,4 +75,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    debugImplementation(libs.ui.tooling)
 }

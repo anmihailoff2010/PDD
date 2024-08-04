@@ -31,7 +31,7 @@ class QuestionsViewModel(private val context: Context) : ViewModel() {
     }
 
     fun loadQuestions(ticketNumber: Int) {
-        val fileName = "ticket${ticketNumber}.json"
+        val fileName = "Билет ${ticketNumber}.json"
         try {
             val jsonString = loadJsonFromAsset(context, fileName)
             questions = parseQuestions(jsonString)
