@@ -126,14 +126,12 @@ fun MistakesScreen(navController: NavHostController, viewModel: QuestionsViewMod
                                     Text(
                                         text = it.text,
                                         fontFamily = FontFamily.Default,
-                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Normal,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 14.sp,
                                         lineHeight = 20.sp,
                                         color = Color(0xFF606873),
                                         modifier = Modifier
-                                            .width(327.dp)
-                                            .height(80.dp)
+                                            .fillMaxWidth()
                                             .padding(bottom = 8.dp)
                                     )
 
@@ -168,7 +166,6 @@ fun MistakesScreen(navController: NavHostController, viewModel: QuestionsViewMod
                                             Text(
                                                 text = answer.answerText,
                                                 fontFamily = FontFamily.Default,
-                                                fontStyle = androidx.compose.ui.text.font.FontStyle.Normal,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 13.sp,
                                                 lineHeight = 20.sp,
