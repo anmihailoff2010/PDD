@@ -84,22 +84,24 @@ fun QuestionsScreen(navController: NavHostController, category: String, ticketNu
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         question.imageUrl?.let { imageUrl ->
-                            val painter = rememberAsyncImagePainter(
-                                ImageRequest.Builder(context)
-                                    .data(imageUrl)
-                                    .build()
-                            )
-                            Image(
-                                painter = painter,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .width(327.dp)
-                                    .height(123.dp)
-                                    .clip(RoundedCornerShape(14.dp, 14.dp, 14.dp, 14.dp)),
-                                contentScale = ContentScale.Crop
-                            )
+                            if (!imageUrl.contains("no_image.jpg")) {
+                                val painter = rememberAsyncImagePainter(
+                                    ImageRequest.Builder(context)
+                                        .data(imageUrl)
+                                        .build()
+                                )
+                                Image(
+                                    painter = painter,
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .width(327.dp)
+                                        .height(123.dp)
+                                        .clip(RoundedCornerShape(14.dp, 14.dp, 14.dp, 14.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = question.text,
                             fontFamily = notoSans,
